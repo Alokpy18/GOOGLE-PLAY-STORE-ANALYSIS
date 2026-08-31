@@ -14,3 +14,9 @@ The dataset was cleaned and filtered using:
 Category-Wise total installs, average rating, and total reviews were calculated.
 
 A Plotly grouped bar chart was created to compare average rating and total review count. The chart is configured to be available only between 3 PM to 5 PM. 
+
+## INSIGHTS
+- The Family category has the highest total review count indicating strong user engagement.
+- The Personalization category has one of the highest average ratings among the top 10 categories.
+- Most of the selected app categories have an average rating above 4.0, showing positive user satisfaction.
+- The number of reviews varies significantly across categories, with Family and Game having much higher review counts than several other categories.
