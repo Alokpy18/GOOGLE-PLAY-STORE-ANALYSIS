@@ -1,0 +1,165 @@
+#import the required libraries
+from os import remove
+
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from datetime import datetime
+
+google_df = pd.read_csv("googleplaystoredata.csv")
+country_df = pd.read_csv("app_country_stats.csv")
+
+#Display the first 5 rows of the both datasets
+print(google_df.head())
+print(country_df.head())
+
+print(google_df.shape)
+print(country_df.shape)
+
+print(google_df.columns.tolist())
+print(country_df.columns.tolist())
+
+#Basic data checking
+
+#check missing values in both datasets
+print(google_df.isnull().sum())
+print(country_df.isnull().sum())
+
+#check duplicate rows in both datasets 
+print(google_df.duplicated().sum())
+print(country_df.duplicated().sum())
+
+#Check unique app name and categories
+print(google_df["App"].nunique())
+print(google_df["Category"].nunique())
+
+#check unique app_id and countries
+print(country_df["app_id"].nunique())
+print(country_df["country"].nunique())
+
+#display some unique country code
+print(country_df["country"].unique()[:20])
+
+#Dislay categories
+print(google_df["Category"].unique())
+
+#Data cleaning
+
+#remove the invalid category '1.9'
+google_df = google_df[google_df["Category"] != "1.9"]
+
+#convert installs into numeric values 
+google_df["Installs"] = (google_df["Installs"].str.replace(",", "", regex = False)
+                         .str.replace("+", "", regex = False))
+
+#convert country-wise installs into numeric values 
+country_df["installs"] = (country_df["installs"].astype(str).str.replace(",", "", regex = False)
+                          .str.replace("+", "", regex = False).astype(float))
+
+#remove rows where important country data missing
+country_df = country_df.dropna(subset=["app_id","country", "installs"])
+
+#remove duplicate rows 
+google_df = google_df.drop_duplicates()
+country_df = country_df.drop_duplicates()
+
+#check the cleaned datasets
+print(google_df.shape)
+print(country_df.shape)
+
+print(google_df.head())
+print(country_df.head())
+
+#apply filters
+#remove categories starting with A, C, G, S
+google_df = google_df[~google_df["Category"].str.startswith(("A", "C", "G", "S"), na=False)]
+
+#convert Installs to numeric
+google_df["Installs"] = pd.to_numeric(google_df["Installs"], errors='coerce')
+
+#total installs for each category
+category_installs = (google_df.groupby("Category")["Installs"].sum()
+.sort_values(ascending=False))
+
+#top 5 cotegories by total installs
+top_5_categories = category_installs.head(5)
+print(top_5_categories)
+
+#keep only top 5 catigories 
+google_df = google_df[google_df["Category"].isin(top_5_categories.index)]
+
+#keep catgories where total installs is greater than 1 million
+valid_categories = category_installs[pd.to_numeric(category_installs, errors='coerce') > 1000000].index
+google_df = google_df[google_df["Category"].isin(valid_categories)]
+
+#check the final filtered data
+print(google_df.shape)
+print(google_df["Category"].unique())
+print(google_df[["App", "Category", "Installs"]].head(10))
+
+print(country_df.columns)
+print(google_df.columns)
+
+#create an interactive choropleth map
+
+#apply time restriction (6pm to 8 pm IST)
+country_df["scraped_at"] = pd.to_datetime(country_df["scraped_at"])
+print(country_df["scraped_at"].dt.hour.value_counts().sort_index())
+current_hour = datetime.now().hour
+if 18 <= current_hour < 20:
+#keep only data between 
+  country_df = country_df[(country_df["scraped_at"].dt.hour >= 18) & (country_df["scraped_at"].dt.hour < 20)]
+  print(country_df.shape[0])
+  country_df["country"] = country_df["country"].str.upper().str.strip()
+
+#convert 2 letter into 3 letter country code in lower to upper case
+  country_codes = {
+    "US": "USA",
+    "IN": "IND",
+    "BR": "BRA",
+    "ID": "IDN",
+    "MX": "MEX",
+    "GB": "GBR",
+    "CA": "CAN",
+    "AU": "AUS",
+    "DE": "DEU",
+    "FR": "FRA",
+    "JP": "JPN",
+    "CN": "CHN",
+    "IT": "ITA",
+    "ES": "ESP",
+    "RU": "RUS",
+    "KR": "KOR",
+    "TR": "TUR",
+    "PH": "PHL",
+    "VN": "VNM",
+    "TH": "THA",
+  }
+
+  country_df["iso_alpha"] = country_df["country"].map(country_codes)
+
+#remove countries whose iso code is not available
+  map_df = country_df.dropna(subset=["iso_alpha"])
+
+#total installs for each country
+  country_installs = map_df.groupby(["country","iso_alpha"])["installs"].sum().reset_index()
+  print("Map data:", country_installs.head(10))
+  print(country_installs["iso_alpha"].unique())
+  print(len(country_installs))
+
+#create choropleth map
+  fig = px.choropleth(country_installs, 
+                    locations="iso_alpha", 
+                    color="installs",
+                    hover_name="country",
+                    hover_data = {"iso_alpha": False, "installs": True},
+                    locationmode="ISO-3",
+                    title = "Country-wise App Installs",
+                    color_continuous_scale="Viridis")
+  fig.write_html("task_2_choropleth_map.html")
+
+  fig.show()
+
+  print("map displayed successfully")
+else:
+  print("map is available only between 6 pm to 8 pm IST")
