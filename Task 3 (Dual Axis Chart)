@@ -1,0 +1,180 @@
+from pdb import pm
+import pandas as pd
+import numpy as np 
+import plotly.graph_objects as go
+from datetime import datetime
+import pytz
+
+google_df = pd.read_csv("googleplaystoredata.csv")
+
+#make sure numeric columns
+google_df["Installs"] = pd.to_numeric(google_df["Installs"].astype(str).str.replace(",", "", regex = False).str.replace("+", "", regex = False), errors='coerce')
+google_df["Price"] = pd.to_numeric(google_df["Price"].astype(str).str.replace("$", "", regex = False), errors='coerce')
+# convert size into MB
+def convert_size(size):
+    size = str(size)
+
+    if size.endswith("M"):
+        return float(size.replace("M", ""))
+    elif size.endswith("k"):
+        return float(size.replace("k", "")) / 1024
+    else:
+        return np.nan
+google_df["Size"] = google_df["Size"].apply(convert_size)
+
+#check the cleaned columns
+print(google_df[["Installs", "Price", "Size"]].head())
+
+#Calculate the Revenue
+#formula: Revenue = Installs * Price
+google_df["Revenue"] = google_df["Installs"] * google_df["Price"]
+print(google_df[["App", "Installs", "Price", "Revenue"]].head())
+
+#apply Android version and App name filters
+#convert Android version into numeric values
+google_df["Android_Ver_Num"] = (google_df["Android Ver"].astype(str).str.extract(r"(\d+(?:\.\d+)?)")[0])
+
+google_df["Android_Ver_Num"] = pd.to_numeric(google_df["Android_Ver_Num"], errors='coerce')
+
+print(google_df["Android_Ver_Num"].dropna().unique()[:20])
+print("Android Version > 4.0:", (google_df["Android_Ver_Num"] > 4.0).sum())
+#apply all required filters
+filtered_df = google_df[
+    (google_df["Installs"] >= 10000) &
+    ( 
+        (google_df["Type"] == "Free")
+|
+        ((google_df["Type"] == "Paid") & (google_df["Revenue"] >= 10000))
+    ) &
+    (google_df["Android_Ver_Num"] > 4.0) &
+    (google_df["Size"] > 15) &
+    (google_df["Content Rating"] == "Everyone") &
+    (google_df["App"].str.len() <= 30)
+]
+
+print(len(filtered_df))
+print(filtered_df[["App", "Installs", "Price", "Revenue", "Android_Ver_Num", "Size", "Content Rating"]].head(10))
+
+print("After all filters:", len(filtered_df))
+
+print("Free apps:", len(google_df[google_df["Type"] == "Free"]))
+
+print("Paid apps:", len(google_df[google_df["Type"] == "Paid"]))
+
+print("Paid with revenue >= 10000:",
+      len(google_df[
+          (google_df["Type"] == "Paid") &
+          (google_df["Revenue"] >= 10000)
+      ]))
+
+
+# Check each filter step-by-step
+
+df1 = google_df[google_df["Installs"] >= 10000]
+print("1. Installs >= 10000:", len(df1))
+
+df2 = df1[
+    (df1["Type"] == "Free") |
+    ((df1["Type"] == "Paid") & (df1["Revenue"] >= 10000))
+]
+print("2. Free OR Paid Revenue >= 10000:", len(df2))
+
+df3 = df2[df2["Android_Ver_Num"] > 4.0]
+print("3. Android Version > 4.0:", len(df3))
+
+df4 = df3[df3["Size"] > 15]
+print("4. Size > 15 MB:", len(df4))
+
+df5 = df4[df4["Content Rating"] == "Everyone"]
+print("5. Content Rating Everyone:", len(df5))
+
+df6 = df5[df5["App"].str.len() <= 30]
+print("6. App name <= 30 characters:", len(df6))
+
+#time restriction: 1 PM TO 2 PM IST
+
+india_time = datetime.now(pytz.timezone("Asia/Kolkata"))
+
+current_hour = india_time.hour
+
+if current_hour < 13 or current_hour >= 14:
+    print("Task 3 graph is available only between 1 PM and 2 PM IST.")
+else:
+
+    # Use the filtered data only
+    df_time = filtered_df.copy()
+
+    print("Task 3 is running between 1 PM and 2 PM IST.")
+    print("Rows after all filters:", len(df_time))
+
+    # Find Top 3 categories based on average installs
+    top3_categories = (
+        df_time.groupby("Category")["Installs"]
+        .mean()
+        .nlargest(3)
+        .index
+    )
+
+    # Keep only Top 3 categories
+    top3_df = df_time[
+        df_time["Category"].isin(top3_categories)
+    ].copy()
+
+    # Group by Category and Type
+    grouped_df = (
+        top3_df
+        .groupby(["Category", "Type"])
+        .agg(
+            Avg_Installs=("Installs", "mean"),
+            Avg_Revenue=("Revenue", "mean")
+        )
+        .reset_index()
+    )
+
+    print("\nTop 3 Category Data:")
+    print(grouped_df)
+
+    # Create Dual Axis Chart
+
+    fig = go.Figure()
+
+    # Average Installs
+    fig.add_trace(
+        go.Bar(
+            x=grouped_df["Category"] + " - " + grouped_df["Type"],
+            y=grouped_df["Avg_Installs"],
+            name="Average Installs"
+        )
+    )
+
+    # Average Revenue
+    fig.add_trace(
+        go.Scatter(
+            x=grouped_df["Category"] + " - " + grouped_df["Type"],
+            y=grouped_df["Avg_Revenue"],
+            name="Average Revenue",
+            yaxis="y2",
+            mode="lines+markers"
+        )
+    )
+
+    # Layout for Dual Axis
+    fig.update_layout(
+        title="Average Installs vs Average Revenue - Top 3 Categories",
+        xaxis_title="Category - App Type",
+        yaxis_title="Average Installs",
+        yaxis2=dict(
+            title="Average Revenue ($)",
+            overlaying="y",
+            side="right"
+        ),
+        template="plotly_white"
+    )
+
+    # Show graph
+    fig.show()
+
+    # Save graph
+    fig.write_html("Task_3_Dual_Axis_Chart.html")
+
+    print("Task 3 graph saved successfully.")
