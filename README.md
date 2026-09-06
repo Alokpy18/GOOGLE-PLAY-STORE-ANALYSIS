@@ -41,4 +41,38 @@ python, pandas, plotly
 
 
 ### Insight
-The map helps compare app installations across different countries interactively.
+
+-The map helps compare app installations across different countries interactively.
+-The USA has one of the highest app install volumes shown on the map.
+-Countries like India, Brazil, and the UK also show high app installations compared to many other countries.
+
+
+
+# Task 3 - Dual Axis Chart
+
+## Objective
+Compare the average installs and revenue of Free vs Paid apps within the Top 3 app categories.
+
+## Filters Applied
+- Installs >= 10000
+- Paid Revenue >= $10000
+- Android Version > 4.0
+- Size > 15 MB
+- Content Rating = Everyone
+- App Name <= 30 characters
+- Time restriction: 1 PM - 2 PM
+
+## Tools Used 
+- Python
+- pandas
+- NumPy
+- plotly
+
+## Insights
+- Game-Free has the highest average installs among the categories shown.
+- Tools-Paid has the highest average revenue in the chart.
+- Paid apps have lower installs but can generate much higher revenue than Free apps.
+
+## Output
+
+  
