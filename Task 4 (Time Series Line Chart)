@@ -1,0 +1,105 @@
+import pandas as pd 
+import plotly.graph_objects as go
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+df = pd.read_csv("googleplaystoredata.csv")
+print(df.head())
+print(df.columns)
+print(df.shape)
+
+# convert installs into numeric
+df["Installs"] = (df["Installs"].astype(str).str.replace(",", "", regex = False).str.replace("+", "", regex = False))
+df["Installs"] = pd.to_numeric(df["Installs"], errors="coerce")
+
+#convert Reviews into numeric
+df["Reviews"] = pd.to_numeric(df["Reviews"], errors="coerce")
+
+# convert last updated into date
+df["Last Updated"] = pd.to_datetime(df["Last Updated"], errors="coerce")
+
+#remove the missing values
+df = df.dropna(subset = ["App", "Category", "Reviews", "Installs", "Last Updated"])
+
+#apply App name condition
+df = df[~df["App"].str.lower().str.startswith(("x", "y", "z"))]
+
+df = df[~df["App"].str.lower().str.contains("s", na = False)]
+
+#Reviews > 500
+df = df[df["Reviews"] > 500]
+
+#category candition
+df = df[df["Category"].str.upper().str.startswith(("E", "C", "B"))]
+
+#Required catigories translation
+category_translation = {
+    "BEAUTY": "सौंदर्य",
+    "BUSINESS": "வணிகம்",
+    "DATING": "Partnersuche"
+}
+
+df["Category_Display"] = (df["Category"].str.upper().map(category_translation).fillna(df["Category"]))
+
+#make a Month column
+df["Month"] = df["Last Updated"].dt.to_period("M").dt.to_timestamp()
+
+#month + category wise total installs 
+monthly_data = (df.groupby(["Month", "Category_Display"], as_index = False)["Installs"].sum())
+
+print(monthly_data.head(10))
+print(len(df))
+
+#calculate month-over-month growth 
+monthly_data = monthly_data.sort_values(["Category_Display", "Month"])
+monthly_data["MoM_Growth"] = (monthly_data.groupby("Category_Display")["Installs"].pct_change() * 100)
+print(monthly_data)
+
+#mark a significant growth
+monthly_data["Significant_Growth"] = (monthly_data["MoM_Growth"] > 20)
+print(monthly_data[["Month", "Category_Display", "MoM_Growth", "Significant_Growth"]])
+
+#time restriction 6 pm to 9 pm IST
+current_time = datetime.now(ZoneInfo("Asia/Kolkata"))
+current_hour = current_time.hour
+if 18 <= current_time.hour < 21:
+    show_graph = True
+else:
+    show_graph = False
+
+#make a time series line chart
+if show_graph:
+    fig = go.Figure()
+    for category in monthly_data["Category_Display"].unique():
+        category_data = monthly_data[monthly_data["Category_Display"] == category].sort_values("Month")
+
+        fig.add_trace(go.Scatter(
+            x = category_data["Month"], 
+            y = category_data["Installs"],
+                 mode = "lines+markers", 
+                 name = category
+        ))        
+
+        growth_data = category_data[category_data["Significant_Growth"]]
+        if not growth_data.empty:
+            fig.add_trace(
+                go.Scatter(
+                    x = growth_data["Month"],
+                    y = growth_data["Installs"],
+                         mode = "markers",
+                         name = f"{category}-Growth > 20%",
+                         marker = dict(size = 10)
+                )
+            )
+    fig.update_layout(
+        title = "Total Installs Trend By App Category",
+        xaxis_title = "Month",
+        yaxis_title = "Total Installs",
+        hovermode = "x unified"
+    )
+    fig.write_html("Task_4_Time_Series_Line_Chart.html")
+    fig.show()
+
+
+else:
+    print("chart is available only between 6 PM TO 9 PM IST")
