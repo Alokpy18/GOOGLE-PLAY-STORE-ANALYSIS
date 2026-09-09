@@ -75,4 +75,18 @@ Compare the average installs and revenue of Free vs Paid apps within the Top 3 a
 
 ## Output
 
-  
+## Task 4 - Time Series Line Chart 
+
+## Objective
+Analyze the monthly install trends by app category and identify significant growth.
+
+## Work done
+-Calculate monthly category-wise total installs.
+-Calculate MoM Growth.
+-Highlighted growth above 20%.
+-Time Restriction 6 PM - 9PM.
+
+##Insights
+-Communication has the highest install trend.
+-Some categories show significant growth above 20%.
+Installs increase sharply in the later months.
