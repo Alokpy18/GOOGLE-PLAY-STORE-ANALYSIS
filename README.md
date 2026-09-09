@@ -86,7 +86,7 @@ Analyze the monthly install trends by app category and identify significant grow
 -Highlighted growth above 20%.
 -Time Restriction 6 PM - 9PM.
 
-##Insights
+## Insights
 -Communication has the highest install trend.
 -Some categories show significant growth above 20%.
-Installs increase sharply in the later months.
+-Installs increase sharply in the later months.
