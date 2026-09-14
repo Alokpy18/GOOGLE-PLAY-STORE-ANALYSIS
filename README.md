@@ -90,3 +90,23 @@ Analyze the monthly install trends by app category and identify significant grow
 - Communication has the highest install trend.
 - Some categories show significant growth above 20%.
 - Installs increase sharply in the later months.
+
+## Task 5 - Bubble Chart 
+
+## Objective
+Created an interactive Bubble Chart to analyze the relationship between **App Size, Average Rating, and Installs**.
+
+## Filters Applied
+- Rating >3.5
+- Reviews > 500
+- Installs > 50000
+- Sentiment Subjectivity > 0.5
+- App name should not contain "S"
+- Selected categories as per task requirements
+- Time restrictions 5 PM TO 7 PM IST
+
+## Insights
+1. Most apps have a good rating between 4.2 and 4.5.
+2. Bigger bubbles show apps with more instlls.
+3. Game apps have good ratings and are available in different app size.
+
