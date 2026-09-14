@@ -1,0 +1,163 @@
+import pandas as pd 
+import plotly.express as px
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+google_df = pd.read_csv("googleplaystoredata.csv")
+user_reviews_df = pd.read_csv("googleplaystore_user_reviews.csv")
+print(google_df.head())
+print(user_reviews_df.head())
+print(google_df.columns.tolist())
+print(user_reviews_df.columns.tolist())
+
+#Select Required columns
+google_df = google_df[
+    ["App", "Category", "Rating", "Reviews", "Size", "Installs"]
+    ].copy()
+user_reviews_df = user_reviews_df[
+    ["App", "Sentiment_Subjectivity"]
+    ].copy()
+print(google_df.head())
+print(user_reviews_df.head())
+
+#clean size, reviews, installs columns
+google_df["Size"] = google_df["Size"].str.replace("M", "", regex = False)
+google_df["Size"] = pd.to_numeric(google_df["Size"], errors = "coerce")
+
+google_df["Reviews"] = google_df["Reviews"] = pd.to_numeric(google_df["Reviews"], errors = "coerce")
+
+google_df["Installs"] = (google_df["Installs"].str.replace(",", "", regex = False).str.replace("+", "", regex = False))
+google_df["Installs"] = pd.to_numeric(google_df["Installs"], errors = "coerce")
+
+google_df["Rating"] = pd.to_numeric(google_df["Rating"], errors = "coerce")
+
+print(google_df.dtypes)
+
+#convert sentiment_subjectivity into numeric values
+user_reviews_df["Sentiment_Subjectivity"] = pd.to_numeric(user_reviews_df["Sentiment_Subjectivity"], errors = "coerce")
+print(user_reviews_df["Sentiment_Subjectivity"].head())
+
+#calculate the average of sentiment subjectivity for each app
+subjectivity_df = (user_reviews_df.groupby("App", as_index = False)
+                   ["Sentiment_Subjectivity"].mean())
+print(subjectivity_df.head())
+
+#merge both dataset using App name
+google_df = google_df.merge(subjectivity_df, 
+                            on = "App",
+                            how = "inner")
+print(google_df.head())
+print(len(google_df))
+
+#apply all required filters
+required_categories = [
+    "GAME",
+    "BEAUTY",
+    "BUSINESS",
+    "COMICS",
+    "COMMUNICATION",
+    "DATING",
+    "ENTERTAINMENT",
+    "SOCIAL",
+    "EVENTS"
+]
+task5_df = google_df[(google_df["Rating"] > 3.5) & 
+                     (google_df["Category"].str.upper().isin(required_categories)) & 
+                     (google_df["Reviews"] > 500) & 
+
+                     (~google_df["App"].str.contains("s", case = False, na = False)) & 
+                     (google_df["Sentiment_Subjectivity"] > 0.5) & 
+                     (google_df["Installs"] > 50000)
+                     ].copy()
+print(len(task5_df))
+print(task5_df.head())
+
+#translate selected categories for graph display
+category_translation = {
+    "BEAUTY": "सुंदरता",
+    "BUSINESS": "வணிகம்",
+    "DATING": "Partnersuche"
+}
+
+task5_df["Display_Category"] = (
+    task5_df["Category"].str.upper().map(lambda x: category_translation.get(x, x.title()))
+)
+print(task5_df[["Category", "Display_Category"]].drop_duplicates())
+
+#highlight game category in pink
+task5_df["Color_Group"] = task5_df["Category"].str.upper().apply(lambda x: "Game" if x == "GAME" else "Other")
+print(task5_df[["Category", "Color_Group"]].head())
+
+#check current IST time
+current_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
+print(current_ist.strftime("%I:%M %p"))
+
+current_hour = current_ist.hour
+current_minute = current_ist.minute
+
+start_time = 17 * 60
+end_time = 19 * 60
+current_time_minutes = current_hour * 60 + current_minute
+
+if start_time <= current_time_minutes < end_time:
+    print("Time restriction satisfied. Graph can be display")
+else:
+    print("Graph can only be displayed between 5 PM to 7 PM IST.")
+
+#create the BUBBLE CHART
+if start_time <= current_time_minutes < end_time:
+    max_installs = task5_df["Installs"].max()
+
+    fig = px.scatter(
+        task5_df,
+        x="Size",
+        y="Rating",
+        size="Installs",
+        color="Color_Group",
+        hover_name="App",
+        hover_data={
+            "Category": True,
+            "Display_Category": True,
+            "Reviews": True,
+            "Installs": True,
+            "Sentiment_Subjectivity": ":.2f",
+            "Size": ":.2f",
+            "Rating": ":.2f",
+            "Color_Group": False
+        },
+        labels={
+            "Size": "App Size (MB)",
+            "Rating": "Average Rating",
+            "Installs": "Number of Installs",
+            "Display_Category": "Category"
+        },
+        title="App Size vs Average Rating - Bubble Chart",
+        size_max=45
+        )        
+
+    #highlight game category in pink
+    fig.update_traces(
+        marker=dict(
+            line=dict(width=1)
+        )
+    )
+
+    fig.for_each_trace(
+        lambda trace: trace.update(
+            marker_color="pink"
+        ) if trace.name == "Game" else None
+    )
+
+    fig.update_layout(
+        xaxis_title="App Size (MB)",
+        yaxis_title="Average Rating",
+        legend_title="Category",
+        template="plotly_white"
+    )
+
+    fig.show()
+    fig.write_html("Task_5_Bubble_Chart.html")
+
+else:
+    print("Graph is hidden because the current IST time is outside 5 PM to 7 PM.")
+
