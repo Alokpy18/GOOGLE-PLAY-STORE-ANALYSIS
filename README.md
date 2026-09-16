@@ -110,3 +110,20 @@ Created an interactive Bubble Chart to analyze the relationship between **App Si
 2. Bigger bubbles show apps with more instlls.
 3. Game apps have good ratings and are available in different app size.
 
+## Task 6 - Staked Area Chart
+
+## Objective
+Created a Staked Area Chart to show cumulative app installs over time for different app categories.
+
+## Work Done
+- Filtered Google Play Store data
+- Prepared month-wise category installs
+- Calculated cumulative installs using 'cumsum()'
+- Calculated Month-over-Month growth
+- Highlighted high-growth months
+- Created an interactive staked area chart
+- Applied 4 pm to 6 pm IST display restriction
+
+## Insights
+
+
