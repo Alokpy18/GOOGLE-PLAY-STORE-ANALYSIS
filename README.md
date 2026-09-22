@@ -126,4 +126,6 @@ Created a Staked Area Chart to show cumulative app installs over time for differ
 
 ## Insights
 
-
+1. Photography category has the highest cumulative installs and shows the strongest overall growth over time.
+2. Personalization and Productivity categories also show noticeable growth, especially toward the end of the period.
+3. Tools, Parenting, and Travel & Local have comparatively lower cumulative installs but show gradual growth in the later months.
