@@ -18,8 +18,8 @@ A Plotly grouped bar chart was created to compare average rating and total revie
 ## Output
 
 ## INSIGHTS
-- The Family category has the highest total review count indicating strong user engagement.
-- The Personalization category has one of the highest average ratings among the top 10 categories.
+- Personalization has the highest average rating ~4.5, but almost no reviews meaning very few people actually installed used those apps.
+- Family has the most reviews by far, but its average rating is roughly the same as everyone else high popularity doesn't mean higher quality.
 - Most of the selected app categories have an average rating above 4.0, showing positive user satisfaction.
 - The number of reviews varies significantly across categories, with Family and Game having much higher review counts than several other categories.
 
@@ -36,8 +36,6 @@ Created an interactive Choropleth Map using Plotly to visualize country-wise app
 
 ### Tools used 
 python, pandas, plotly
-
-### Output
 
 
 ### Insight
@@ -73,7 +71,6 @@ Compare the average installs and revenue of Free vs Paid apps within the Top 3 a
 - Tools-Paid has the highest average revenue in the chart.
 - Paid apps have lower installs but can generate much higher revenue than Free apps.
 
-## Output
 
 ## Task 4 - Time Series Line Chart 
 
@@ -107,7 +104,7 @@ Created an interactive Bubble Chart to analyze the relationship between **App Si
 
 ## Insights
 1. Most apps have a good rating between 4.2 and 4.5.
-2. Bigger bubbles show apps with more instlls.
+2. Bigger bubbles show apps with more installs.
 3. Game apps have good ratings and are available in different app size.
 
 ## Task 6 - Staked Area Chart
@@ -126,6 +123,6 @@ Created a Staked Area Chart to show cumulative app installs over time for differ
 
 ## Insights
 
-1. Photography category has the highest cumulative installs and shows the strongest overall growth over time.
-2. Personalization and Productivity categories also show noticeable growth, especially toward the end of the period.
-3. Tools, Parenting, and Travel & Local have comparatively lower cumulative installs but show gradual growth in the later months.
+- Photography category has the highest cumulative installs and shows the strongest overall growth over time.
+-  Personalization and Productivity categories also show noticeable growth, especially toward the end of the period.
+- Tools, Parenting, and Travel & Local have comparatively lower cumulative installs but show gradual growth in the later months.
